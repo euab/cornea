@@ -124,7 +124,7 @@ async def _write_face(
     sql = """INSERT INTO face(tag, blob) VALUES ($1, $2)"""
     try:
         async with conn.transaction():
-            conn.execute(sql, tag, blob)
+            await conn.execute(sql, tag, blob)
     except PostgresError as e:
         logger.error(e)
         return False
@@ -152,7 +152,7 @@ async def all_faces(conn: Connection) -> List[Tuple[int, int, bytes]]:
 
     try:
         async with conn.transaction():
-            rows = conn.fetch(query)
+            rows = await conn.fetch(query)
     except PostgresError as e:
         logger.error(f"Error while loading all faces:\n{e}")
         raise DatabaseError
@@ -171,7 +171,7 @@ async def get_faces_by_tag(
 
     try:
         async with conn.transaction():
-            rows = conn.fetch(query, tag)
+            rows = await conn.fetch(query, tag)
     except PostgresError as e:
         logger.error(f"Error while fetching faces for tag: {tag}")
         raise DatabaseError
@@ -190,7 +190,7 @@ async def get_face_by_id(
 
     try:
         async with conn.transaction():
-            row = conn.fetchrow(query, face_id)
+            row = await conn.fetchrow(query, face_id)
     except PostgresError as e:
         logger.error(f"Error while fetching face for id: {face_id}")
         raise DatabaseError
