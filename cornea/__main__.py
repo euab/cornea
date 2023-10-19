@@ -14,15 +14,7 @@ def setup_logging(debug: bool) -> None:
     level = logging.INFO
     if debug:
         level = logging.DEBUG
-    logger.setLevel(level)
-
-    stream = logging.StreamHandler()
-    stream.setLevel(level)
-    log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    formatter = logging.Formatter(log_format)
-
-    stream.setFormatter(formatter)
-    logger.addHandler(stream)
+    logging.basicConfig(level=level)
 
 
 def serve_application() -> None:
