@@ -5,17 +5,21 @@
 # See the file COPYING for more details.
 
 import base64
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+from typing import Any, Callable, Coroutine
+from functools import wraps
 
 from sanic import Sanic, response
 from sanic.request import Request
 from sanic.response import HTTPResponse, json
+from sanic.exceptions import SanicException
 
 from cornea.model import Model
-from cornea.frame import Frame
-from cornea.constants import MODEL_DEFAULT_PATH
+from cornea import database
 
-model: Model = Model(MODEL_DEFAULT_PATH)
-
+model: Model = Model("data/new_model.yml")
+app = Sanic("cornea_server")
 
 def add_root_route(app: Sanic) -> None:
     @app.get('/')
@@ -23,17 +27,30 @@ def add_root_route(app: Sanic) -> None:
         return response.text("Hello from Cornea version: 0.0.0-alpha1")
 
 
-def create_server() -> Sanic:
-    app = Sanic("cornea_server")
+def threaded_request(func: Callable[..., Coroutine]) -> Callable:
+    @wraps(func)
+    async def inner(
+        request: Request, *args: Any, **kwargs: Any
+    ) -> HTTPResponse:
+        def run() -> HTTPResponse:
+            return asyncio.run(func(request, *args, **kwargs))
+        
+        with ThreadPoolExecutor() as pool:
+            return await request.app.loop.run_in_executor(pool, run)
+
+
+def create_server(
+        model: Model
+) -> Sanic:
+    app.ctx.model = model
+    
     add_root_route(app)
 
-    @app.post('/detect_frame')
-    async def detect_frame(request: Request):
+    @app.post('/model/detect_frame')
+    async def detect_frame(request: Request) -> HTTPResponse:
         data = request.json
         decoded = base64.b64decode(bytes(data["frame"], encoding='utf8'))
-        
-        frame = Frame(decoded)
-        result = await model.handle_frame(frame)
+        result = await model.handle_frame(decoded)
 
         match_data: dict
         if result is None:
@@ -56,5 +73,16 @@ def create_server() -> Sanic:
         }
 
         return json(body=match_data)
+    
+    @threaded_request
+    @app.post('/model/train')
+    async def train(request: Request) -> HTTPResponse:
+        try:
+            faces = await database.all_faces(app.ctx.conn)
+            app.ctx.model.train(faces)
+
+            return json({"status": "ok"})
+        except SanicException:
+            return json({"status": "fail"})
 
     return app

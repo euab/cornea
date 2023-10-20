@@ -2,3 +2,4 @@ sanic==21.12
 websockets==10.0
 opencv-python==4.8.0.76
 asyncpg==0.28.0
+numpy==1.26.0

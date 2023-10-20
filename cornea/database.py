@@ -1,5 +1,6 @@
 import os
 import logging
+import asyncio
 from typing import Optional, List, Tuple
 
 import asyncpg
@@ -28,8 +29,9 @@ async def connect(username: Optional[str],
                   password: Optional[str],
                   database: Optional[str],
                   host: Optional[str],
-                  port: Optional[int]) -> Optional[Connection]:
-    
+                  port: Optional[int],
+                  loop: asyncio.AbstractEventLoop
+                  ) -> Optional[Connection]:
     try:
         logger.info("Connecting to PostgreSQL database: "
                     f"postgres://{username}@{host}:{port}/{database}")
@@ -38,7 +40,8 @@ async def connect(username: Optional[str],
             password=password,
             database=database,
             host=host,
-            port=port
+            port=port,
+            loop=loop
         )
     except PostgresError as e:
         msg = (
@@ -49,11 +52,15 @@ async def connect(username: Optional[str],
         logger.error(msg)
         return None
     
+    if not await create_tables(conn):
+        return None
+
     logger.info('Connection successful')
     return conn
 
 
 async def create_tables(conn: Connection) -> bool:
+    logger.info("Creating database tables")
     sql = """
         CREATE TABLE IF NOT EXISTS person(
             id SERIAL PRIMARY KEY,
@@ -70,8 +77,8 @@ async def create_tables(conn: Connection) -> bool:
     try:
         async with conn.transaction():
             await conn.execute(sql)
-    except PostgresError:
-        logger.error("Could not create database tables.")
+    except PostgresError as e:
+        logger.error(f"Could not create database tables.\n{e}")
         return False
     
     return True
@@ -81,8 +88,8 @@ async def write_person(conn: Connection,
                      first_name: str,
                      last_name: str) -> None:
     sql = """
-        INSERT INTO person(first_name, last_name)
-        VALUES ($1, $2)
+        INSERT INTO person (first_name, last_name)
+        VALUES ($1, $2);
     """
     try:
         async with conn.transaction():
@@ -95,8 +102,12 @@ async def write_person(conn: Connection,
         return
 
 
-async def get_person_by_tag(conn: Connection, tag: int) -> Person:
-    sql = "SELECT * from person WHERE id=$1"
+def get_person_by_tag_sync(conn: Connection, tag: int) -> Optional[Person]:
+    return asyncio.run(get_faces_by_tag, conn, tag)
+
+
+async def get_person_by_tag(conn: Connection, tag: int) -> Optional[Person]:
+    sql = "SELECT * from person WHERE id=$1;"
 
     try:
         async with conn.transaction():
@@ -121,7 +132,7 @@ async def _write_face(
     tag: int,
     blob: bytes
 ) -> bool:
-    sql = """INSERT INTO face(tag, blob) VALUES ($1, $2)"""
+    sql = """INSERT INTO face (tag, face_data) VALUES ($1, $2);"""
     try:
         async with conn.transaction():
             await conn.execute(sql, tag, blob)
@@ -147,8 +158,8 @@ async def write_face_data_from_image(
         )
 
 
-async def all_faces(conn: Connection) -> List[Tuple[int, int, bytes]]:
-    query = "SELECT * FROM face"
+async def all_faces(conn: Connection) -> List[Tuple[bytes, int]]:
+    query = "SELECT * FROM face;"
 
     try:
         async with conn.transaction():
@@ -159,7 +170,7 @@ async def all_faces(conn: Connection) -> List[Tuple[int, int, bytes]]:
     
     faces = []
     for row in rows:
-        face = (row["id"], row["tag"], row["blob"])
+        face = (row["face_data"], row["tag"])
         faces.append(face)
     return faces
 
@@ -167,7 +178,7 @@ async def all_faces(conn: Connection) -> List[Tuple[int, int, bytes]]:
 async def get_faces_by_tag(
         conn: Connection,
         tag: int) -> List[Tuple[int, int, bytes]]:
-    query = "SELECT * from face WHERE tag=$1"
+    query = "SELECT * from face WHERE tag=$1;"
 
     try:
         async with conn.transaction():
@@ -178,7 +189,7 @@ async def get_faces_by_tag(
     
     faces = []
     for row in rows:
-        face = (row["id", row["tag"], row["blob"]])
+        face = (row["id", row["tag"], row["face_data"]])
         faces.append(face)
     return faces
 
@@ -186,7 +197,7 @@ async def get_faces_by_tag(
 async def get_face_by_id(
         conn: Connection,
         face_id: int) -> Tuple[int, int, bytes]:
-    query = "SELECT * from face where id=$1"
+    query = "SELECT * from face WHERE id=$1;"
 
     try:
         async with conn.transaction():
@@ -195,4 +206,4 @@ async def get_face_by_id(
         logger.error(f"Error while fetching face for id: {face_id}")
         raise DatabaseError
     
-    return (row["id"], row["tag"], row["blob"])
+    return (row["id"], row["tag"], row["face_data"])

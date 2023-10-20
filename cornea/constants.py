@@ -1,1 +1,7 @@
-MODEL_DEFAULT_PATH = "models/data.yml"
+MODEL_DEFAULT_PATH = "data/new_model.yml"
+
+POSTGRES_DATABASE ="cornea"
+POSTGRES_USER = ""
+POSTGRES_PASSWORD = ""
+POSTGRES_HOST = ""
+POSTGRES_PORT = 5432
