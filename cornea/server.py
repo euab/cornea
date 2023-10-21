@@ -7,7 +7,7 @@
 import base64
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Callable, Coroutine
+from typing import Any, Callable, Coroutine, Dict
 from functools import wraps
 
 from sanic import Sanic, response
@@ -18,8 +18,8 @@ from sanic.exceptions import SanicException
 from cornea.model import Model
 from cornea import database
 
-model: Model = Model("data/new_model.yml")
 app = Sanic("cornea_server")
+
 
 def add_root_route(app: Sanic) -> None:
     @app.get('/')
@@ -40,10 +40,12 @@ def threaded_request(func: Callable[..., Coroutine]) -> Callable:
 
 
 def create_server(
-        model: Model
+        model: Model,
+        config: Dict[Any, Any]
 ) -> Sanic:
+    app.ctx.config = config
     app.ctx.model = model
-    
+
     add_root_route(app)
 
     @app.post('/model/detect_frame')

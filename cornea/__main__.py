@@ -35,7 +35,7 @@ def setup_logging(debug: bool) -> None:
 def serve_application(config: Dict[Any, Any], loop: asyncio.AbstractEventLoop) -> None:
     from cornea import server
 
-    app = server.create_server(Model("data/new_model.yml"))
+    app = server.create_server(Model("data/new_model.yml", config), config)
     server_coro = app.create_server(
         return_asyncio_server=True
     )

@@ -1,7 +1,9 @@
-from typing import Union, Tuple, Optional, List
+from typing import Union, Tuple, Optional, List, Dict, Any
 from pathlib import Path
 from io import BytesIO
 import logging
+from datetime import datetime
+import os
 
 from PIL import Image
 
@@ -12,7 +14,6 @@ from cv2 import CascadeClassifier
 from cv2.face import LBPHFaceRecognizer_create
 
 from cornea.frame import Frame
-from cornea.constants import MODEL_DEFAULT_PATH
 
 HAAR_CASCADE_DATA = 'haarcascade_frontalface_default.xml'
 
@@ -23,11 +24,13 @@ class Model:
     def __init__(
             self,
             model_path: Union[str, Path],
+            config: Dict[Any, Any]
     ) -> None:
         self.model_path = model_path
         self.classifier = CascadeClassifier(
             cv2.data.haarcascades + HAAR_CASCADE_DATA)
         self.recognizer = LBPHFaceRecognizer_create()
+        self.config = config
 
         self._load_model(self.model_path)
     
@@ -44,7 +47,8 @@ class Model:
         self.recognizer.train(training_data[0], training_data[1])
 
         if output_path is None:
-            output_path = MODEL_DEFAULT_PATH
+            output_path = self.format_model_path(
+                self.config["model_default_path"])
         
         logger.info(f"Writing OpenCV model to: {output_path}")
         self.recognizer.write(output_path)
@@ -102,3 +106,15 @@ class Model:
                          ))
 
             return face_fingerprint, confidence, location
+    
+    def get_current_timestamp(self) -> str:
+        dt_format = "%d_%m_%y_%H%M%S"
+        return datetime.strftime(datetime.now(), dt_format)
+    
+    def format_model_path(self, model_dir: str) -> str:
+        if not os.path.isdir(model_dir):
+            raise RuntimeError('Model directory does not exist.')
+        file_str = model_dir + "/cornea_cv_"
+        file_str += self.get_current_timestamp() + '.yml'
+
+        return os.path.abspath(file_str)
