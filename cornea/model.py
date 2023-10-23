@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Union, Tuple, Optional, List, Dict, Any
 from pathlib import Path
 from io import BytesIO
@@ -20,10 +21,16 @@ HAAR_CASCADE_DATA = 'haarcascade_frontalface_default.xml'
 logger = logging.getLogger(__name__)
 
 
+def get_latest_model_file(model_dir: str) -> str:
+    models = [os.path.join(model_dir, basename) for basename \
+              in os.listdir(model_dir)]
+    return max(models, key=os.path.getctime)
+
+
 class Model:
     def __init__(
             self,
-            model_path: Union[str, Path],
+            model_path: Optional[Union[str, Path]],
             config: Dict[Any, Any]
     ) -> None:
         self.model_path = model_path
@@ -34,15 +41,23 @@ class Model:
 
         self._load_model(self.model_path)
     
-    def _load_model(self, model_path: Union[str, Path]) -> None:
+    def _load_model(
+            self,
+            model_path: Optional[Union[str, Path]] = None,
+            latest: bool = True
+        ) -> None:
+        model_dir = self.config["model_default_path"]
+        if latest or model_path is None:
+            model_path = get_latest_model_file(model_dir)
+
         self.recognizer.read(model_path)
     
     @classmethod
     def load_model(
         cls,
-        model_path: Union[str, Path],
+        model_path: Optional[Union[str, Path]],
         config: Dict[Any, Any]
-    ) -> None:
+    ) -> Model:
         return cls(model_path, config)
     
     def train(
