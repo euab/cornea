@@ -37,6 +37,14 @@ class Model:
     def _load_model(self, model_path: Union[str, Path]) -> None:
         self.recognizer.read(model_path)
     
+    @classmethod
+    def load_model(
+        cls,
+        model_path: Union[str, Path],
+        config: Dict[Any, Any]
+    ) -> None:
+        return cls(model_path, config)
+    
     def train(
             self,
             training_data: List[Tuple[bytes, int]],
