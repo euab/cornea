@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import Any, Dict, Optional, Union, NoReturn
+from typing import Any, Dict, Optional
 
 import yaml
 
@@ -34,7 +34,7 @@ def _format_config_warning(config_path: str) -> str:
             "https://github.com/euab/cornea/issues")
 
 
-def ensure_config_exists(config_path: str) -> Union[bool, NoReturn]:
+def ensure_config_exists(config_path: str) -> bool:
     """
     Ensure the configuration file exists in the correct location.
     Create a new one if needed.
