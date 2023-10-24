@@ -27,6 +27,18 @@ def get_latest_model_file(model_dir: str) -> str:
     return max(models, key=os.path.getctime)
 
 
+def ensure_model_folder_exists(model_dir: str) -> None:
+    if os.path.isdir(model_dir):
+        return
+    
+    try:
+        os.mkdir(model_dir)
+    except OSError as e:
+        logger.error(
+            f"Unable to create models folder at: {model_dir}.\n{e}")
+        raise RuntimeError(e)
+
+
 class Model:
     def __init__(
             self,
@@ -47,6 +59,7 @@ class Model:
             latest: bool = True
         ) -> None:
         model_dir = self.config["model_default_path"]
+        ensure_model_folder_exists(model_dir)
         if latest or model_path is None:
             model_path = get_latest_model_file(model_dir)
 
