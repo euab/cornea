@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union, NoReturn
 
 import yaml
 
@@ -24,7 +24,17 @@ postgres:
 """
 
 
-def ensure_config_exists(config_path: str) -> bool:
+def _format_config_warning(config_path: str) -> str:
+    return (f"\n\nNo config was found at: {config_path} so a new config "
+            "file was created there.\nPlease open the config file and "
+            "configure Cornea as needed before running again.\nThis warning "
+            "will also appear if this is your first time running Cornea, as "
+            "a\nconfiguration file will need to be generated for future "
+            "launches.\n\nIf this message persists please visit: "
+            "https://github.com/euab/cornea/issues")
+
+
+def ensure_config_exists(config_path: str) -> Union[bool, NoReturn]:
     """
     Ensure the configuration file exists in the correct location.
     Create a new one if needed.
@@ -36,7 +46,12 @@ def ensure_config_exists(config_path: str) -> bool:
         return True
     
     logger.info("Unable to find configuration, creating a new file.")
-    return _write_default_config(config_path)
+    if not _write_default_config(config_path):
+        logger.critical("Could not create default confiuration file.")
+        exit(1)
+
+    print(_format_config_warning(config_path))
+    exit(1)
 
 
 def _write_default_config(config_path: str) -> bool:
