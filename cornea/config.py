@@ -8,7 +8,8 @@ from cornea.constants import CONFIG_LOCATION
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_CONFIG = f"""
+DEFAULT_CONFIG = \
+f"""
 # This is the default model directory. Changing this will alter where Cornea
 # models are outputted to.
 model_default_path: "./models"
