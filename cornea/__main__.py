@@ -79,7 +79,11 @@ def serve_application(config: Dict[Any, Any], loop: asyncio.AbstractEventLoop) -
     loop.run_until_complete(srv.startup())
     loop.run_until_complete(srv.after_start())
 
-    loop.run_forever()
+    try:
+        loop.run_forever()
+    except KeyboardInterrupt:
+        srv.close()
+        loop.close()
 
 
 async def start_and_train_only(
@@ -90,7 +94,6 @@ async def start_and_train_only(
     conn = await database_connect(config["postgres"])
     training_data = await database.all_faces(conn)
     model.train(training_data)
-
 
 if __name__ == '__main__':
     run()
