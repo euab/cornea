@@ -21,10 +21,15 @@ HAAR_CASCADE_DATA = 'haarcascade_frontalface_default.xml'
 logger = logging.getLogger(__name__)
 
 
-def get_latest_model_file(model_dir: str) -> str:
+def get_latest_model_file(model_dir: str) -> Optional[str]:
     models = [os.path.join(model_dir, basename) for basename \
               in os.listdir(model_dir)]
-    return max(models, key=os.path.getctime)
+    try:
+        latest = max(models, key=os.path.getctime)
+    except ValueError:
+        return None
+
+    return latest
 
 
 def ensure_model_folder_exists(model_dir: str) -> None:
@@ -62,6 +67,10 @@ class Model:
         ensure_model_folder_exists(model_dir)
         if latest or model_path is None:
             model_path = get_latest_model_file(model_dir)
+        
+        if model_path is None:
+            raise RuntimeError('No models have been trained yet. To train '
+                               'a model, please run "cornea --train".')
 
         self.recognizer.read(model_path)
     
