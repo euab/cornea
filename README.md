@@ -2,10 +2,6 @@
 Cornea is a server that can take multiple video streams and perform facial
 recognition on them, returning the face match and the confidence value.
 
-There is no support for training models with this yet, I have trained a model
-using OpenCVs `LPBHFaceRecognizer`
-for the actual facial recognition process. Adding support for training a model
-will be simple to initially implement and is the next thing to do.
 Currently Cornea is only capable of receiving data frame by frame by use of a
 REST API.
 
@@ -39,7 +35,15 @@ Which could return an output similar to:
 ```
 
 ## Installation
-To install and use run
+To install and use you will need a working installation of PostgreSQL on your
+system.
+
+Once setup run the following commands
+```sql
+CREATE ROLE cornea WITH LOGIN PASSWORD '<your_password>';
+CREATE DATABASE cornea OWNER cornea;
+```
+Then, go ahead and install and run Cornea:
 ```bash
 $ git clone https://github.com/euab/cornea.git
 ```
@@ -47,7 +51,24 @@ $ git clone https://github.com/euab/cornea.git
 $ cd cornea
 ```
 ```bash
-$ python3 -m cornea
+$ python3 -m cornea --run
 ```
-As said above, for the moment, you do need a model which has been trained
-on faces using OpenCV's `LPBHFaceRecognizer`.
+On running the program for the first time, you will be prompted to configure
+the database connection according to how the database was created above. Edit
+the configuration stored in `config.yml` accordingly. An example is provided:
+```yaml
+database:
+    postgres:
+        database: "cornea"
+        user: "cornea"
+        password: "youshallnotpass"
+        host: "127.0.0.1"
+        port: 5432
+```
+
+To train a model, ensure that you have a populated database of valid training
+data and run:
+```bash
+$ python3 -m cornea --train
+```
+Models are outputted in YAML format.
