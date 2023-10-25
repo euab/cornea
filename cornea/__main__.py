@@ -89,7 +89,7 @@ def serve_application(config: Dict[Any, Any], loop: asyncio.AbstractEventLoop) -
 async def start_and_train_only(
         config: Dict[Any, Any],
     ) -> None:
-    model = Model.load_model(config["model_default_path"], config=config)
+    model = Model.load_model(None, config, False)
     
     conn = await database_connect(config["postgres"])
     training_data = await database.all_faces(conn)

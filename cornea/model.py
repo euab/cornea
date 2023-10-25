@@ -48,7 +48,8 @@ class Model:
     def __init__(
             self,
             model_path: Optional[Union[str, Path]],
-            config: Dict[Any, Any]
+            config: Dict[Any, Any],
+            do_load: bool = True
     ) -> None:
         self.model_path = model_path
         self.classifier = CascadeClassifier(
@@ -56,7 +57,8 @@ class Model:
         self.recognizer = LBPHFaceRecognizer_create()
         self.config = config
 
-        self._load_model(self.model_path)
+        if do_load:
+            self._load_model(self.model_path)
     
     def _load_model(
             self,
@@ -78,9 +80,10 @@ class Model:
     def load_model(
         cls,
         model_path: Optional[Union[str, Path]],
-        config: Dict[Any, Any]
+        config: Dict[Any, Any],
+        actually_load: bool = True
     ) -> Model:
-        return cls(model_path, config)
+        return cls(model_path, config, actually_load)
     
     def train(
             self,
