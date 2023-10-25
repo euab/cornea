@@ -16,11 +16,11 @@ model_default_path: "./models"
 
 # Uncomment this section if you are using PostgreSQL as a database
 postgres:
-    POSTGRES_DATABASE: "cornea"
-    POSTGRES_USER: "cornea"
-    POSTGRES_PASSWORD: "welcome"
-    POSTGRES_HOST: "127.0.0.1"
-    POSTGRES_PORT: 5432
+    database: "cornea"
+    user: "cornea"
+    password: "welcome"
+    host: "127.0.0.1"
+    port: 5432
 """
 
 
