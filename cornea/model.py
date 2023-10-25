@@ -15,6 +15,7 @@ from cv2 import CascadeClassifier
 from cv2.face import LBPHFaceRecognizer_create
 
 from cornea.frame import Frame
+from cornea.config import Config
 
 HAAR_CASCADE_DATA = 'haarcascade_frontalface_default.xml'
 
@@ -48,7 +49,7 @@ class Model:
     def __init__(
             self,
             model_path: Optional[Union[str, Path]],
-            config: Dict[Any, Any],
+            config: Config,
             do_load: bool = True
     ) -> None:
         self.model_path = model_path
@@ -65,7 +66,7 @@ class Model:
             model_path: Optional[Union[str, Path]] = None,
             latest: bool = True
         ) -> None:
-        model_dir = self.config["model_default_path"]
+        model_dir = self.config.model_dir
         ensure_model_folder_exists(model_dir)
         if latest or model_path is None:
             model_path = get_latest_model_file(model_dir)
@@ -80,7 +81,7 @@ class Model:
     def load_model(
         cls,
         model_path: Optional[Union[str, Path]],
-        config: Dict[Any, Any],
+        config: Config,
         actually_load: bool = True
     ) -> Model:
         return cls(model_path, config, actually_load)
@@ -96,7 +97,7 @@ class Model:
 
         if output_path is None:
             output_path = self.format_model_path(
-                self.config["model_default_path"])
+                self.config.model_dir)
         
         logger.info(f"Writing OpenCV model to: {output_path}")
         self.recognizer.write(output_path)

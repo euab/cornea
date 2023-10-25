@@ -14,13 +14,14 @@ f"""
 # models are outputted to.
 model_default_path: "./models"
 
-# Uncomment this section if you are using PostgreSQL as a database
-postgres:
-    database: "cornea"
-    user: "cornea"
-    password: "welcome"
-    host: "127.0.0.1"
-    port: 5432
+database:
+    # Uncomment this section if you are using PostgreSQL as a database
+    # postgres:
+    #     database: "cornea"
+    #     user: "cornea"
+    #     password: "welcome"
+    #     host: "127.0.0.1"
+    #     port: 5432
 """
 
 
@@ -87,3 +88,17 @@ def load_config_file(config_path: Optional[str]) -> Dict[Any, Any]:
         config_dict[k] = v or {}
     
     return config_dict
+
+
+class Config:
+    """
+    Global configuration object for Cornea.
+    """
+    def __init__(
+            self,
+            config_dict: Dict[Any, Any]
+    ) -> None:
+        self._config = config_dict
+
+        self.model_dir: str = self._config["model_default_path"]
+        self.database: Dict[str, Any] = self._config["database"]

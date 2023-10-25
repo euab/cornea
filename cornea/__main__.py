@@ -6,7 +6,7 @@ import argparse
 from cornea import database
 from cornea.model import Model
 from cornea.constants import CONFIG_LOCATION
-from cornea.config import load_config_file
+from cornea.config import load_config_file, Config
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +30,7 @@ def run() -> None:
     setup_logging(True)
 
     config = load_config_file(CONFIG_LOCATION)
+    config = Config(config)
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -49,7 +50,8 @@ def setup_logging(debug: bool) -> None:
     logging.basicConfig(level=level)
 
 
-async def database_connect(db_config: Dict[Any, Any]) -> database.Connection:
+async def database_connect(db_config: Dict[str, Any]) -> database.Connection:
+    db_config = db_config["postgres"]
     return await database.connect(
         db_config["user"],
         db_config["password"],
@@ -60,7 +62,7 @@ async def database_connect(db_config: Dict[Any, Any]) -> database.Connection:
     )
 
 
-def serve_application(config: Dict[Any, Any], loop: asyncio.AbstractEventLoop) -> None:
+def serve_application(config: Config, loop: asyncio.AbstractEventLoop) -> None:
     from cornea import server
 
     app = server.create_server(Model("data/new_model.yml", config), config)
@@ -70,7 +72,7 @@ def serve_application(config: Dict[Any, Any], loop: asyncio.AbstractEventLoop) -
 
     logger.info(f"Starting Cornea server on http://127.0.0.1:8000")
     app.ctx.conn = loop.run_until_complete(
-        database_connect(config["postgres"])
+        database_connect(config.database)
     )
 
     task = asyncio.ensure_future(server_coro, loop=loop)
@@ -87,11 +89,11 @@ def serve_application(config: Dict[Any, Any], loop: asyncio.AbstractEventLoop) -
 
 
 async def start_and_train_only(
-        config: Dict[Any, Any],
+        config: Config,
     ) -> None:
     model = Model.load_model(None, config, False)
     
-    conn = await database_connect(config["postgres"])
+    conn = await database_connect(config.database)
     training_data = await database.all_faces(conn)
     model.train(training_data)
 
