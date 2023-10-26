@@ -1,24 +1,27 @@
 import logging
 import asyncio
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import argparse
 
 from cornea import database
 from cornea.model import Model
 from cornea.constants import CONFIG_LOCATION
 from cornea.config import load_config_file, Config
+from cornea.training import ingest_training_data, load_training_folder
 
 logger = logging.getLogger(__name__)
 
 
 def create_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="Cornea",
+        prog="cornea",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description=""
     )
     parser.add_argument("--run", action="store_true")
     parser.add_argument("--train", action="store_true")
+    parser.add_argument('--ingest', action="store", nargs='+', type=str)
+    parser.add_argument('--tag', action="store", nargs="+", type=int)
 
     return parser
 
@@ -39,6 +42,12 @@ def run() -> None:
         serve_application(config, loop)
     elif cmdline_arguments.train:
         loop.run_until_complete(start_and_train_only(config))
+    elif cmdline_arguments.ingest:
+        loop.run_until_complete(ingest_only(
+            config,
+            cmdline_arguments.ingest[0],
+            cmdline_arguments.tag[0])
+        )
     else:
         logger.error("No command specified.")
 
@@ -96,6 +105,19 @@ async def start_and_train_only(
     conn = await database_connect(config.database)
     training_data = await database.all_faces(conn)
     model.train(training_data)
+
+
+async def ingest_only(
+        config: Config,
+        ingest_folder: str,
+        tag: Optional[int]
+) -> None:
+    if tag is None:
+        raise ValueError("Must provide a tag for training folder.")
+    conn = await database_connect(config.database)
+    td = load_training_folder(ingest_folder, tag)
+    await ingest_training_data(conn, td)
+
 
 if __name__ == '__main__':
     run()

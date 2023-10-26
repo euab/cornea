@@ -13,7 +13,7 @@ from cornea.model import Model
 
 logger = logging.getLogger(__name__)
 
-ACCEPTED_EXTENSIONS= [".jpg", ".jpeg"]
+ACCEPTED_EXTENSIONS= (".jpg", ".jpeg")
 
 
 def load_training_file(path: str) -> Optional[bytes]:
@@ -43,7 +43,7 @@ def load_training_folder(path: str, tag: int) -> List[Tuple[bytes, int]]:
     images = []
     files = [image for image in os.listdir(path)]
     for image in files:
-        if image not in ACCEPTED_EXTENSIONS:
+        if not image.lower().endswith(ACCEPTED_EXTENSIONS):
             continue
 
         image_data = load_training_file(f"{path}/{image}")
