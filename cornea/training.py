@@ -17,6 +17,7 @@ ACCEPTED_EXTENSIONS= (".jpg", ".jpeg")
 
 
 def load_training_file(path: str) -> Optional[bytes]:
+    """Load an image from the filesystem"""
     if not os.path.exists(os.path.abspath(path)):
         return
     
@@ -61,6 +62,7 @@ def load_training_folder(path: str, tag: int) -> List[Tuple[bytes, int]]:
 async def ingest_training_data(
         conn: Connection,
         data: List[Tuple[bytes, int]]) -> None:
+    """Ingest loaded image data into the database"""
     logger.info("Ingesting training data to database")
     tag = data[0][1]
 

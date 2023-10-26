@@ -22,12 +22,19 @@ app = Sanic("cornea_server")
 
 
 def add_root_route(app: Sanic) -> None:
+    """Add the root route to the API."""
     @app.get('/')
     async def hello(request: Request) -> HTTPResponse:
         return response.text("Hello from Cornea version: 0.0.0-alpha1")
 
 
 def threaded_request(func: Callable[..., Coroutine]) -> Callable:
+    """
+    Decorator used to execute computationally intense requests in a
+    separate thread to avoid blocking the server, which would cause
+    it to be unable to process requests until the intense request has
+    completed.
+    """
     @wraps(func)
     async def inner(
         request: Request, *args: Any, **kwargs: Any
