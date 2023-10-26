@@ -18,10 +18,16 @@ def create_argument_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description=""
     )
-    parser.add_argument("--run", action="store_true")
-    parser.add_argument("--train", action="store_true")
-    parser.add_argument('--ingest', action="store", nargs='+', type=str)
-    parser.add_argument('--tag', action="store", nargs="+", type=int)
+    parser.add_argument(
+        "--run", action="store_true", help="Run Cornea server")
+    parser.add_argument(
+        "--train", action="store_true", help="Train a new Cornea model")
+    parser.add_argument(
+        '--ingest', action="store", nargs='+', type=str,
+        help="Ingest training data into Cornea's database")
+    parser.add_argument(
+        '--tag', action="store", nargs="+", type=int,
+        help="Tag for training data")
 
     return parser
 
