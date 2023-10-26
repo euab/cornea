@@ -65,7 +65,19 @@ database:
         host: "127.0.0.1"
         port: 5432
 ```
+## Ingesting training data
+Currently, as we haven't implemented few-shot learning, a decent supply of
+training data is required to ensure accuracy. The implementation of few-shot
+or even one-shot learning methods is planned in the future.
+There is a schema for ingesting training data which is that a folder of
+training data will contain the training data for one person. You also need to
+supply their tag for the moment. So, a command
+to ingest training data for one person is:
+```bash
+# python3 -m cornea --ingest ./my_training_data/person1/ --tag 1
+```
 
+## Training
 To train a model, ensure that you have a populated database of valid training
 data and run:
 ```bash
