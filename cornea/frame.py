@@ -8,6 +8,9 @@ _FRAME_T = Union[NDArray[np.uint8], bytes]
 
 
 class Frame:
+    """
+    Class to represent a received frame of image data from the API.
+    """
     def __init__(
             self,
             frame_data: _FRAME_T
