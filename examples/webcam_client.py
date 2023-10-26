@@ -11,7 +11,7 @@ import base64
 # Default display font for the output window.
 DEFAULT_DISPLAY_FONT = cv2.FONT_HERSHEY_SIMPLEX
 # Set this to the API URI you are using for your Cornea instance.
-CORNEA_API_URI = "http://0.0.0.0:8000/detect_frame"
+CORNEA_API_URI = "http://0.0.0.0:8000/model/detect_frame"
 
 # Our array of people.
 names = ["Person1", "Person2", "Person3"]
