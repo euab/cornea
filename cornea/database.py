@@ -11,10 +11,12 @@ logger = logging.getLogger(__name__)
 
 
 class DatabaseError(Exception):
+    """Exception class for generic database errors."""
     pass
 
 
 class Person:
+    """Representation of a person in the person table"""
     def __init__(self,
                  tag: int,
                  first_name: str,
@@ -32,6 +34,11 @@ async def connect(username: Optional[str],
                   port: Optional[int],
                   loop: asyncio.AbstractEventLoop
                   ) -> Optional[Connection]:
+    """
+    Attempt to establish a connection to the PostgreSQL database.
+    On connecting to the database, this code will check if all
+    database relations have been set up and will set them up if they have not.
+    """
     try:
         logger.info("Connecting to PostgreSQL database: "
                     f"postgres://{username}@{host}:{port}/{database}")
@@ -60,6 +67,7 @@ async def connect(username: Optional[str],
 
 
 async def create_tables(conn: Connection) -> bool:
+    """Create tables in the database needed to run Cornea."""
     logger.info("Creating database tables")
     sql = """
         CREATE TABLE IF NOT EXISTS person(
@@ -87,6 +95,7 @@ async def create_tables(conn: Connection) -> bool:
 async def write_person(conn: Connection,
                      first_name: str,
                      last_name: str) -> None:
+    """Write a new person to the database"""
     sql = """
         INSERT INTO person (first_name, last_name)
         VALUES ($1, $2);
@@ -103,10 +112,12 @@ async def write_person(conn: Connection,
 
 
 def get_person_by_tag_sync(conn: Connection, tag: int) -> Optional[Person]:
+    """Synchronous option to fetch a person from the database."""
     return asyncio.run(get_faces_by_tag, conn, tag)
 
 
 async def get_person_by_tag(conn: Connection, tag: int) -> Optional[Person]:
+    """Get a person by their training tag from the database."""
     sql = "SELECT * from person WHERE id=$1;"
 
     try:
@@ -132,6 +143,7 @@ async def _write_face(
     tag: int,
     blob: bytes
 ) -> bool:
+    """Write a face sample to the database"""
     sql = """INSERT INTO face (tag, face_data) VALUES ($1, $2);"""
     try:
         async with conn.transaction():
@@ -159,6 +171,7 @@ async def write_face_data_from_image(
 
 
 async def all_faces(conn: Connection) -> List[Tuple[bytes, int]]:
+    """Get all faces and their training tags from the database."""
     query = "SELECT * FROM face;"
 
     try:
@@ -178,6 +191,7 @@ async def all_faces(conn: Connection) -> List[Tuple[bytes, int]]:
 async def get_faces_by_tag(
         conn: Connection,
         tag: int) -> List[Tuple[int, int, bytes]]:
+    """Get a group of faces by their training tag"""
     query = "SELECT * from face WHERE tag=$1;"
 
     try:
@@ -197,6 +211,7 @@ async def get_faces_by_tag(
 async def get_face_by_id(
         conn: Connection,
         face_id: int) -> Tuple[int, int, bytes]:
+    """Get a face by its database primary key"""
     query = "SELECT * from face WHERE id=$1;"
 
     try:
