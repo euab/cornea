@@ -75,6 +75,7 @@ class Model:
             raise RuntimeError('No models have been trained yet. To train '
                                'a model, please run "cornea --train".')
 
+        logger.info(f"Loading model: {model_path}")
         self.recognizer.read(model_path)
     
     @classmethod
