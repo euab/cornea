@@ -56,6 +56,7 @@ def ensure_config_exists(config_path: str) -> bool:
 
 
 def _write_default_config(config_path: str) -> bool:
+    """Write the default configuration to a new config file."""
     try:
         with open(config_path, 'w') as config_file:
             config_file.write(DEFAULT_CONFIG)
@@ -67,6 +68,7 @@ def _write_default_config(config_path: str) -> bool:
 
 
 def load_config_file(config_path: Optional[str]) -> Dict[Any, Any]:
+    """Load the config file and return its dictionary representation"""
     if config_path is None:
         config_path = CONFIG_LOCATION
 
