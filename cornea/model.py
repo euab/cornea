@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_latest_model_file(model_dir: str) -> Optional[str]:
+    """Get the most recently created model file and return its path."""
     models = [os.path.join(model_dir, basename) for basename \
               in os.listdir(model_dir)]
     try:
@@ -34,6 +35,9 @@ def get_latest_model_file(model_dir: str) -> Optional[str]:
 
 
 def ensure_model_folder_exists(model_dir: str) -> None:
+    """
+    Check if the model folder exists and create a new one if it is not present
+    """
     if os.path.isdir(model_dir):
         return
     
@@ -46,6 +50,11 @@ def ensure_model_folder_exists(model_dir: str) -> None:
 
 
 class Model:
+    """
+    Class to represent a OpenCV LBPH model. This class manages the
+    loading/reloading of models as well as training new models and
+    predicting faces from image data.
+    """    
     def __init__(
             self,
             model_path: Optional[Union[str, Path]],
@@ -66,6 +75,10 @@ class Model:
             model_path: Optional[Union[str, Path]] = None,
             latest: bool = True
         ) -> None:
+        """
+        Load a model from the model directory.
+        If latest is set the most recent model is loaded.
+        """
         model_dir = self.config.model_dir
         ensure_model_folder_exists(model_dir)
         if latest or model_path is None:
@@ -85,6 +98,7 @@ class Model:
         config: Config,
         actually_load: bool = True
     ) -> Model:
+        """Load a model and return the model instance."""
         return cls(model_path, config, actually_load)
     
     def train(
@@ -92,6 +106,11 @@ class Model:
             training_data: List[Tuple[bytes, int]],
             output_path: Optional[str] = None
         ) -> None:
+        """
+        Train a model from all training data in the database. If this
+        occurs while serving the API, the newley trained model is reloaded
+        automatically.
+        """
         training_data = self.prepare_training_data(training_data)
         logger.info("Training OpenCV model, this may take a while.")
         self.recognizer.train(training_data[0], training_data[1])
@@ -112,6 +131,11 @@ class Model:
             self,
             training_data: List[Tuple[bytes, int]]
     ) -> Tuple[List[NDArray], List[NDArray]]:
+        """
+        Process training data from the database by converting records into
+        a tuple of lists of NumPY arrays of image data and their associated
+        tags.
+        """
         logger.info("Preparing OpenCV training data...")
         faces = []
         tags = []
@@ -126,7 +150,15 @@ class Model:
         
         return faces, np.array(tags)
     
-    async def handle_frame(self, frame: bytes) -> Optional[Tuple[str, float, dict]]:
+    async def handle_frame(
+            self, frame: bytes) -> Optional[Tuple[str, float, dict]]:
+        """
+        Handle an incoming frame from the API and perform a prediction on the
+        frame to determine the face in the image, if any.
+        Returns a tuple containing the tag, the confidence in the prediction,
+        and the location (x, y, w, h) of the face in the image, for graphical
+        applications.
+        """
         frame = Frame(frame)
         data = cv2.imdecode(frame.frame_data, cv2.IMREAD_GRAYSCALE)
 
@@ -158,10 +190,12 @@ class Model:
             return face_fingerprint, confidence, location
     
     def get_current_timestamp(self) -> str:
+        """Get a timestamp of the current datetime"""
         dt_format = "%d_%m_%y_%H%M%S"
         return datetime.strftime(datetime.now(), dt_format)
     
     def format_model_path(self, model_dir: str) -> str:
+        """Format the file name of a new model."""
         if not os.path.isdir(model_dir):
             raise RuntimeError('Model directory does not exist.')
         file_str = model_dir + "/cornea_cv_"
