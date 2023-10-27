@@ -28,6 +28,10 @@ def create_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         '--tag', action="store", nargs="+", type=int,
         help="Tag for training data")
+    parser.add_argument(
+        '--add-person', action="store", nargs="+", type=str,
+        help="Add a new person to be stored"
+    )
 
     return parser
 
@@ -53,6 +57,10 @@ def run() -> None:
             config,
             cmdline_arguments.ingest[0],
             cmdline_arguments.tag[0])
+        )
+    elif cmdline_arguments.add_person:
+        loop.run_until_complete(do_add_person(
+            config, cmdline_arguments.add_person)
         )
     else:
         logger.error("No command specified.")
@@ -123,6 +131,18 @@ async def ingest_only(
     conn = await database_connect(config.database)
     td = load_training_folder(ingest_folder, tag)
     await ingest_training_data(conn, td)
+
+
+async def do_add_person(
+        config: Config,
+        name: str
+) -> None:
+    if name is None:
+        raise ValueError("Must provide a name for the person")
+    conn = await database_connect(config.database)
+
+    logger.info(f"Write name: {str(name)}")
+    await database.write_person(conn, name[0], name[1])
 
 
 if __name__ == '__main__':
