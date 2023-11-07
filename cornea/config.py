@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 import yaml
 
@@ -104,3 +104,4 @@ class Config:
 
         self.model_dir: str = self._config["model_default_path"]
         self.database: Dict[str, Any] = self._config["database"]
+        self.people: List[Dict[str, Any]] = self._config["people"]
