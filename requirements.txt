@@ -1,4 +1,4 @@
-sanic==21.12
+sanic==21.12.2
 websockets==10.0
 opencv-python==4.8.0.76
 opencv-contrib-python==4.8.0.76
